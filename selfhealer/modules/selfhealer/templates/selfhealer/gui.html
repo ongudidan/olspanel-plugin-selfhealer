@@ -9,7 +9,7 @@
     <div style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-radius: 6px; border: 1px solid rgba(226, 232, 240, 0.8); display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; margin-bottom: 28px; box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.05);">
         <div>
             <h4 style="margin: 0; font-size: 1.45rem; font-weight: 800; background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                🔧 System Self-Healer
+                System Self-Healer
             </h4>
             <p style="margin: 6px 0 0; font-size: 0.88rem; color: #64748b;">
                 Diagnose and repair integration settings, permission models, script handlers, and symlinks on-the-fly.
@@ -17,7 +17,7 @@
         </div>
         <div>
             <button id="btnRunDiagnostics" onclick="runDiagnostics(this)" class="btn btn-pill btn-primary btn-sm heal-btn" style="text-transform: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 4px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);">
-                ⚡ Run System Healing
+                Run System Healing
             </button>
         </div>
     </div>
@@ -25,46 +25,38 @@
     <!-- Quick Services Status Banner -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 28px;">
         <!-- OpenLiteSpeed status -->
-        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
-            <div style="background: {% if ols_active %}#ecfdf5{% else %}#fef2f2{% endif %}; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: {% if ols_active %}#10b981{% else %}#ef4444{% endif %}; font-size: 1.3rem; border: 1.5px solid {% if ols_active %}#a7f3d0{% else %}#fecaca{% endif %};">
-                🌐
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">OpenLiteSpeed</span>
-                <span style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">{% if ols_active %}Active / Online{% else %}Offline{% endif %}</span>
+        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 20px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">OpenLiteSpeed</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: {% if ols_active %}#10b981{% else %}#ef4444{% endif %}; display: inline-block; box-shadow: 0 0 8px {% if ols_active %}#10b981{% else %}#ef4444{% endif %};"></span>
+                <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">{% if ols_active %}Active / Online{% else %}Offline{% endif %}</span>
             </div>
         </div>
 
         <!-- Django backend status -->
-        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
-            <div style="background: {% if cp_active %}#ecfdf5{% else %}#fef2f2{% endif %}; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: {% if cp_active %}#10b981{% else %}#ef4444{% endif %}; font-size: 1.3rem; border: 1.5px solid {% if cp_active %}#a7f3d0{% else %}#fecaca{% endif %};">
-                ⚙️
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Panel Service</span>
-                <span style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">{% if cp_active %}Active / Online{% else %}Offline{% endif %}</span>
+        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 20px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Panel Service</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: {% if cp_active %}#10b981{% else %}#ef4444{% endif %}; display: inline-block; box-shadow: 0 0 8px {% if cp_active %}#10b981{% else %}#ef4444{% endif %};"></span>
+                <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">{% if cp_active %}Active / Online{% else %}Offline{% endif %}</span>
             </div>
         </div>
 
         <!-- Postfix status -->
-        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
-            <div style="background: {% if postfix_active %}#ecfdf5{% else %}#fef2f2{% endif %}; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: {% if postfix_active %}#10b981{% else %}#ef4444{% endif %}; font-size: 1.3rem; border: 1.5px solid {% if postfix_active %}#a7f3d0{% else %}#fecaca{% endif %};">
-                ✉️
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Mail Send (Postfix)</span>
-                <span style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">{% if postfix_active %}Active / Online{% else %}Offline{% endif %}</span>
+        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 20px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Mail Send (Postfix)</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: {% if postfix_active %}#10b981{% else %}#ef4444{% endif %}; display: inline-block; box-shadow: 0 0 8px {% if postfix_active %}#10b981{% else %}#ef4444{% endif %};"></span>
+                <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">{% if postfix_active %}Active / Online{% else %}Offline{% endif %}</span>
             </div>
         </div>
 
         <!-- Dovecot status -->
-        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
-            <div style="background: {% if dovecot_active %}#ecfdf5{% else %}#fef2f2{% endif %}; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: {% if dovecot_active %}#10b981{% else %}#ef4444{% endif %}; font-size: 1.3rem; border: 1.5px solid {% if dovecot_active %}#a7f3d0{% else %}#fecaca{% endif %};">
-                📥
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Mail Receive (Dovecot)</span>
-                <span style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">{% if dovecot_active %}Active / Online{% else %}Offline{% endif %}</span>
+        <div class="stat-card" style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 20px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.015); transition: all 0.2s ease;">
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; display: block; letter-spacing: 0.5px;">Mail Receive (Dovecot)</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: {% if dovecot_active %}#10b981{% else %}#ef4444{% endif %}; display: inline-block; box-shadow: 0 0 8px {% if dovecot_active %}#10b981{% else %}#ef4444{% endif %};"></span>
+                <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">{% if dovecot_active %}Active / Online{% else %}Offline{% endif %}</span>
             </div>
         </div>
     </div>
@@ -73,7 +65,7 @@
     <div style="background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01), 0 2px 4px -1px rgba(0,0,0,0.01); display: flex; flex-direction: column; gap: 18px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
             <h5 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b; display: inline-flex; align-items: center; gap: 6px;">
-                📋 Live Diagnostics Output Console
+                Live Diagnostics Output Console
             </h5>
             <div id="diagnosticsBadge" style="display: none; background: #e0f2fe; color: #0369a1; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                 Idle
