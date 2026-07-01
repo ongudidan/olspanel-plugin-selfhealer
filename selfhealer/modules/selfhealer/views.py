@@ -284,7 +284,71 @@ def download_script_only"""
     except Exception as le:
         log_callback(f"❌ [Error] Patching license validations: {str(le)}\n")
 
-    # 9. Reload OpenLiteSpeed to apply configurations
+    # 9. Repair panel credentials files permissions (for autologin verification)
+    try:
+        log_callback("\n🔑 Diagnosing panel credentials files under etc/...\n")
+        etc_dir = os.path.join(settings.BASE_DIR, 'etc')
+        if os.path.exists(etc_dir):
+            import pwd, grp
+            w_gid = grp.getgrnam('www-data').gr_gid
+            r_uid = pwd.getpwnam('root').pw_uid
+            
+            repaired_count = 0
+            for file_name in os.listdir(etc_dir):
+                if file_name.startswith('_') or file_name.startswith('phpmyadmin_'):
+                    file_path = os.path.join(etc_dir, file_name)
+                    if os.path.isfile(file_path):
+                        os.chown(file_path, r_uid, w_gid)
+                        os.chmod(file_path, 0o644)
+                        repaired_count += 1
+            if repaired_count > 0:
+                log_callback(f"✅ [Permissions] Corrected ownership (root:www-data) and 644 permissions for {repaired_count} credentials files.\n")
+            else:
+                log_callback("ℹ️ [Skip] Credentials files permissions are already correct.\n")
+        else:
+            log_callback("⚠️ [Warning] Panel etc/ directory not found.\n")
+    except Exception as e:
+        log_callback(f"❌ [Error] Repairing credentials files permissions: {str(e)}\n")
+
+    # 10. Repair virtual mailboxes folder permissions
+    try:
+        vmail_dir = '/home/vmail'
+        if os.path.exists(vmail_dir):
+            log_callback("\n✉️ Diagnosing virtual mailboxes folder permissions under /home/vmail...\n")
+            import pwd, grp
+            v_uid = pwd.getpwnam('vmail').pw_uid
+            v_gid = grp.getgrnam('vmail').gr_gid
+            
+            os.chown(vmail_dir, v_uid, v_gid)
+            os.chmod(vmail_dir, 0o700)
+            
+            repaired_dirs = 0
+            for root_dir, dirs, files in os.walk(vmail_dir):
+                for d in dirs:
+                    d_path = os.path.join(root_dir, d)
+                    os.chown(d_path, v_uid, v_gid)
+                    os.chmod(d_path, 0o700)
+                    repaired_dirs += 1
+                for f in files:
+                    f_path = os.path.join(root_dir, f)
+                    os.chown(f_path, v_uid, v_gid)
+                    os.chmod(f_path, 0o600)
+            log_callback(f"✅ [Permissions] Recursively set ownership (vmail:vmail) and correct access modes for {repaired_dirs} mailbox directories.\n")
+        else:
+            log_callback("ℹ️ [Skip] Mail server /home/vmail folder not found on this server.\n")
+    except Exception as e:
+        log_callback(f"❌ [Error] Repairing mailbox folder permissions: {str(e)}\n")
+
+    # 11. Reload Postfix and restart Dovecot
+    try:
+        log_callback("\n✉️ Reloading Postfix and restarting Dovecot services...\n")
+        subprocess.run(["systemctl", "reload", "postfix"])
+        subprocess.run(["systemctl", "restart", "dovecot"])
+        log_callback("✅ Mail services reloaded and restarted successfully.\n")
+    except Exception as e:
+        log_callback(f"❌ [Error] Restarting mail services: {str(e)}\n")
+
+    # 12. Reload OpenLiteSpeed to apply configurations
     try:
         log_callback("\n🔄 Reloading OpenLiteSpeed web server...\n")
         subprocess.run(["/usr/local/lsws/bin/lswsctrl", "reload"])
