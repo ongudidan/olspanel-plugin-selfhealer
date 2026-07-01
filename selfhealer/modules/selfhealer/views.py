@@ -212,6 +212,14 @@ def execute_self_healer(log_callback):
 def run_self_healer_cli():
     execute_self_healer(lambda msg: print(msg, end=''))
 
+def get_authenticated_user(request):
+    """Retrieves authenticated admin, respecting impersonation"""
+    if hasattr(request, 'admin_user') and request.admin_user:
+        if request.user and request.user.is_authenticated and request.user != request.admin_user:
+            return request.user
+        return request.admin_user
+    return request.user if request.user.is_authenticated else None
+
 def is_admin(user):
     """Helper to check if user is superuser or admin staff"""
     return user and (user.is_superuser or user.is_staff)
@@ -219,9 +227,12 @@ def is_admin(user):
 # Django view to render GUI dashboard
 @loginadminoruser
 def self_healer_gui(request):
-    if not is_admin(request.user):
+    user = get_authenticated_user(request)
+    if not is_admin(user):
         return HttpResponse("Unauthorized Access", status=403)
+    base_template = 'whm/base.html' if user.is_superuser else 'users/base.html'
     context = {
+        'base_template': base_template,
         'ols_active': check_service_status('lsws'),
         'postfix_active': check_service_status('postfix'),
         'dovecot_active': check_service_status('dovecot'),
@@ -232,7 +243,8 @@ def self_healer_gui(request):
 # Django view to stream live logs back to client using SSE/StreamingHttpResponse
 @loginadminoruser
 def self_healer_run(request):
-    if not is_admin(request.user):
+    user = get_authenticated_user(request)
+    if not is_admin(user):
         return HttpResponse("Unauthorized Access", status=403)
     def event_stream():
         yield "data: [Initialization] Connecting to self-healer engine...\n\n"
