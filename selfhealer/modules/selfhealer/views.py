@@ -3,10 +3,9 @@ import re
 import subprocess
 import shutil
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.http import StreamingHttpResponse, JsonResponse
+from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 from django.conf import settings
-from users.views import admincheck
+from users.decorators import loginadminoruser
 
 # Helper to check service status
 def check_service_status(service_name):
@@ -213,10 +212,15 @@ def execute_self_healer(log_callback):
 def run_self_healer_cli():
     execute_self_healer(lambda msg: print(msg, end=''))
 
+def is_admin(user):
+    """Helper to check if user is superuser or admin staff"""
+    return user and (user.is_superuser or user.is_staff)
+
 # Django view to render GUI dashboard
-@login_required
-@admincheck
+@loginadminoruser
 def self_healer_gui(request):
+    if not is_admin(request.user):
+        return HttpResponse("Unauthorized Access", status=403)
     context = {
         'ols_active': check_service_status('lsws'),
         'postfix_active': check_service_status('postfix'),
@@ -226,9 +230,10 @@ def self_healer_gui(request):
     return render(request, 'selfhealer/gui.html', context)
 
 # Django view to stream live logs back to client using SSE/StreamingHttpResponse
-@login_required
-@admincheck
+@loginadminoruser
 def self_healer_run(request):
+    if not is_admin(request.user):
+        return HttpResponse("Unauthorized Access", status=403)
     def event_stream():
         yield "data: [Initialization] Connecting to self-healer engine...\n\n"
         
