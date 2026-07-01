@@ -150,7 +150,7 @@ function runDiagnostics(button) {
         
         // Check log output for success or failures
         const text = consoleLog.innerHTML;
-        if (text.includes("Self-Healing Pipeline Execution Completed")) {
+        if (text.includes("OpenLiteSpeed web server reloaded") || text.includes("Self-Healing Pipeline Execution Completed")) {
             badge.textContent = "SUCCESS";
             badge.style.background = "#dcfce7";
             badge.style.color = "#15803d";
