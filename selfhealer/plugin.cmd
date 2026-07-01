@@ -13,8 +13,10 @@ fi
 # Define source and destination paths
 MODULE_SRC="$BASE_DIR/3rdparty/selfhealer/modules/selfhealer"
 MODULE_DEST="$BASE_DIR/modules/selfhealer"
-ICON_SRC="$BASE_DIR/3rdparty/selfhealer/plugin_icon.svg"
-ICON_DEST="$BASE_DIR/media/icon/selfhealer.svg"
+ICON_SVG_SRC="$BASE_DIR/3rdparty/selfhealer/plugin_icon.svg"
+ICON_SVG_DEST="$BASE_DIR/media/icon/selfhealer.svg"
+ICON_PNG_SRC="$BASE_DIR/3rdparty/selfhealer/plugin_icon.png"
+ICON_PNG_DEST="$BASE_DIR/media/icon/selfhealer.png"
 
 # Copy Django module to the system modules directory
 if [ -d "$MODULE_SRC" ]; then
@@ -27,14 +29,16 @@ else
   exit 1
 fi
 
-# Deploy SVG vector icon
-if [ -f "$ICON_SRC" ]; then
-  cp -f "$ICON_SRC" "$ICON_DEST"
-  chown www-data:www-data "$ICON_DEST"
-  echo "✅ SVG vector icon deployed to $ICON_DEST"
-else
-  echo "❌ Error: SVG icon source not found: $ICON_SRC"
-  exit 1
+# Deploy Icons
+if [ -f "$ICON_SVG_SRC" ]; then
+  cp -f "$ICON_SVG_SRC" "$ICON_SVG_DEST"
+  chown www-data:www-data "$ICON_SVG_DEST"
+  echo "✅ SVG vector icon deployed to $ICON_SVG_DEST"
+fi
+if [ -f "$ICON_PNG_SRC" ]; then
+  cp -f "$ICON_PNG_SRC" "$ICON_PNG_DEST"
+  chown www-data:www-data "$ICON_PNG_DEST"
+  echo "✅ PNG preview icon deployed to $ICON_PNG_DEST"
 fi
 
 # Run the system healer immediately on installation to fix OLS/Webmail/phpMyAdmin bugs on-the-fly
