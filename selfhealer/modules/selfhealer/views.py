@@ -284,6 +284,146 @@ def download_script_only"""
     except Exception as le:
         log_callback(f"❌ [Error] Patching license validations: {str(le)}\n")
 
+    # Patch D: Solve FOUC & SVG lag on base.html files
+    try:
+        base_html_files = [
+            os.path.join(settings.BASE_DIR, 'users/templates/users/base.html'),
+            os.path.join(settings.BASE_DIR, 'whm/templates/whm/base.html')
+        ]
+        new_script = """{% if branding.brand_color != "#ef6d19" %}   
+<script>
+(function() {
+    const brandColor = "{{ branding.brand_color }}";
+    if (brandColor === "#ef6d19") return;
+
+    // Apply CSS overrides immediately
+    const style = document.createElement('style');
+    style.innerHTML = `
+        :root { --brand-color: ${brandColor} !important; }
+        .brand-name font, .app-brand font, .app-brand span font { color: ${brandColor} !important; }
+        .sidebar-dark .sidebar-inner .nav > li.active > a i, 
+        .sidebar-dark .sidebar-inner .nav > li.active > a span,
+        .sidebar-dark .sidebar-inner .nav > li.active > a img { color: ${brandColor} !important; }
+    `;
+    document.head.appendChild(style);
+
+    function processImage(img) {
+        const src = img.src;
+        if (!src.endsWith('.svg')) return;
+
+        function replaceImg(svgText) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgText, "image/svg+xml");
+            const svg = doc.querySelector("svg");
+            if (!svg) return;
+
+            Array.from(img.attributes).forEach(attr => {
+                if (attr.name !== "src") {
+                    svg.setAttribute(attr.name, attr.value);
+                }
+            });
+
+            if (!svg.getAttribute("width")) svg.setAttribute("width", img.getAttribute("width") || "40px");
+            if (!svg.getAttribute("height")) svg.setAttribute("height", img.getAttribute("height") || "40px");
+
+            svg.style.cssText = img.style.cssText;
+            svg.style.color = brandColor;
+            svg.setAttribute("fill", "currentColor");
+
+            svg.querySelectorAll("*").forEach(el => {
+                if (el.getAttribute("fill") && el.getAttribute("fill") !== "none") {
+                    el.setAttribute("fill", "currentColor");
+                }
+                if (el.getAttribute("stroke") && el.getAttribute("stroke") !== "none") {
+                    el.setAttribute("stroke", "currentColor");
+                }
+            });
+
+            img.replaceWith(svg);
+        }
+
+        const cached = localStorage.getItem('svg_' + src);
+        if (cached) {
+            replaceImg(cached);
+        } else {
+            fetch(src)
+                .then(r => r.text())
+                .then(svgText => {
+                    try {
+                        localStorage.setItem('svg_' + src, svgText);
+                    } catch(e) {}
+                    replaceImg(svgText);
+                })
+                .catch(err => console.error("SVG load failed:", err));
+        }
+    }
+
+    function init() {
+        document.querySelectorAll('#search_here img[src$=".svg"], #left-sidebar img[src$=".svg"]').forEach(processImage);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+{% endif %}"""
+        
+        for file_path in base_html_files:
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                
+                pattern = re.compile(r'{%\s*if\s+branding\.brand_color\s*!=\s*\"#ef6d19\"\s*%}\s*<script>.*?</script>\s*{%\s*endif\s*%}', re.DOTALL)
+                if pattern.search(content):
+                    if 'processImage' not in content:
+                        content = pattern.sub(new_script, content)
+                        with open(file_path, 'w') as f:
+                            f.write(content)
+                        log_callback(f"✅ [Performance] Patched color flicker (FOUC) & SVG lag in {os.path.basename(file_path)}.\n")
+                else:
+                    if '</head>' in content and 'processImage' not in content:
+                        content = content.replace('</head>', f'{new_script}\n</head>')
+                        with open(file_path, 'w') as f:
+                            f.write(content)
+                        log_callback(f"✅ [Performance] Injected color flicker (FOUC) script in {os.path.basename(file_path)}.\n")
+    except Exception as fe:
+        log_callback(f"❌ [Error] Patching color flicker (FOUC): {str(fe)}\n")
+
+    # Patch E: Replace external jQuery CDNs with local assets
+    try:
+        cdn_files = [
+            os.path.join(settings.BASE_DIR, 'users/templates/users/footer.html'),
+            os.path.join(settings.BASE_DIR, 'whm/templates/whm/footer.html'),
+            os.path.join(settings.BASE_DIR, 'users/templates/users/db_import.html')
+        ]
+        patched_cdn = 0
+        for file_path in cdn_files:
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                
+                modified = False
+                if 'https://code.jquery.com/jquery-3.5.1.slim.min.js' in content:
+                    content = content.replace('https://code.jquery.com/jquery-3.5.1.slim.min.js', '/media/js/jquery.min.js')
+                    modified = True
+                if 'https://code.jquery.com/jquery-3.6.0.min.js' in content:
+                    content = content.replace('https://code.jquery.com/jquery-3.6.0.min.js', '/media/js/jquery.min.js')
+                    modified = True
+                
+                if modified:
+                    with open(file_path, 'w') as f:
+                        f.write(content)
+                    patched_cdn += 1
+        if patched_cdn > 0:
+            log_callback(f"✅ [Performance] Replaced external jQuery CDNs with local resources in {patched_cdn} files.\n")
+        else:
+            log_callback("ℹ️ [Skip] External jQuery CDNs already replaced with local scripts.\n")
+    except Exception as ce:
+        log_callback(f"❌ [Error] Patching jQuery CDN links: {str(ce)}\n")
+
     # 9. Repair panel credentials files permissions (for autologin verification)
     try:
         log_callback("\n🔑 Diagnosing panel credentials files under etc/...\n")
