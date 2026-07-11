@@ -314,6 +314,40 @@ def download_script_only"""
     except Exception as sce:
         log_callback(f"❌ [Error] Patching users/server_core.py: {str(sce)}\n")
 
+    # Patch G: Fix AttributeError NoneType object has no attribute get in users/views.py (web_server view)
+    try:
+        views_file = os.path.join(settings.BASE_DIR, 'users/views.py')
+        if os.path.exists(views_file):
+            with open(views_file, 'r') as f:
+                views_content = f.read()
+
+            target_block = """            if request.user:
+                user_data = get_user_data_by_id(request.user.id)
+                whm = user_data.get('whm', 0)
+            elif request.admin_user:
+                user_data = get_user_data_by_id(request.admin_user.id)
+                whm = user_data.get('whm', 0)"""
+
+            patched_block = """            if request.user:
+                user_data = get_user_data_by_id(request.user.id)
+                whm = user_data.get('whm', 0) if user_data else (1 if request.user.is_superuser or request.user.is_staff else 0)
+            elif request.admin_user:
+                user_data = get_user_data_by_id(request.admin_user.id)
+                whm = user_data.get('whm', 0) if user_data else (1 if request.admin_user.is_superuser or request.admin_user.is_staff else 0)"""
+
+            if target_block in views_content:
+                views_content = views_content.replace(target_block, patched_block)
+                with open(views_file, 'w') as f:
+                    f.write(views_content)
+                import py_compile
+                py_compile.compile(views_file)
+                log_callback("✅ [Bug Fix] Patched users/views.py to resolve AttributeError for superuser user_data.\n")
+            else:
+                log_callback("ℹ️ [Bug Fix] users/views.py already patched or block not found.\n")
+    except Exception as ve:
+        log_callback(f"❌ [Error] Patching users/views.py: {str(ve)}\n")
+
+
     # Patch D: Solve FOUC & SVG lag on base.html files
     try:
         base_html_files = [

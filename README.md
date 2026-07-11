@@ -15,6 +15,7 @@ A lightweight, robust, and interactive utility plugin designed for OLSPanel serv
    - Recreates missing or broken phpMyAdmin / Webmail symlinks in `/usr/local/lsws/Example/html/`.
    - Recursively sets RainLoop webmail data directories to `777` (world-writable) for suEXEC compatibility.
    - Diagnoses and repairs APT repository release info changes automatically to prevent PHP package/extension installation failures.
+   - Patches the global `web_server` view in `users/views.py` to fix a Django `AttributeError` crashing third-party plugins (like Terminal) when accessed by superuser accounts.
 
 ## 📦 How to Build / Pack
 To bundle this plugin as a zip archive ready for uploading/installing inside OLSPanel, run:
