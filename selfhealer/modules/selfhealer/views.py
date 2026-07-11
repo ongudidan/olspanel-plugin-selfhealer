@@ -284,6 +284,36 @@ def download_script_only"""
     except Exception as le:
         log_callback(f"❌ [Error] Patching license validations: {str(le)}\n")
 
+    # Patch F: Fix missing import / NameError for run_package_update in users/server_core.py
+    try:
+        server_core_file = os.path.join(settings.BASE_DIR, 'users/server_core.py')
+        if os.path.exists(server_core_file):
+            with open(server_core_file, 'r') as f:
+                sc_content = f.read()
+
+            target_block = """            if not php_version.startswith('cgi'):
+                repo_cmd = "wget -O - https://repo.litespeed.sh | sudo bash"
+                subprocess.run(repo_cmd, shell=True, check=True)
+                run_package_update()"""
+
+            patched_block = """            if not php_version.startswith('cgi'):
+                repo_cmd = "wget -O - https://repo.litespeed.sh | sudo bash"
+                subprocess.run(repo_cmd, shell=True, check=True)
+                from whm.function import run_package_update
+                run_package_update()"""
+
+            if target_block in sc_content:
+                sc_content = sc_content.replace(target_block, patched_block)
+                with open(server_core_file, 'w') as f:
+                    f.write(sc_content)
+                import py_compile
+                py_compile.compile(server_core_file)
+                log_callback("✅ [Bug Fix] Patched users/server_core.py to resolve run_package_update NameError.\n")
+            else:
+                log_callback("ℹ️ [Bug Fix] users/server_core.py already patched or block not found.\n")
+    except Exception as sce:
+        log_callback(f"❌ [Error] Patching users/server_core.py: {str(sce)}\n")
+
     # Patch D: Solve FOUC & SVG lag on base.html files
     try:
         base_html_files = [
@@ -488,7 +518,21 @@ def download_script_only"""
     except Exception as e:
         log_callback(f"❌ [Error] Restarting mail services: {str(e)}\n")
 
-    # 12. Reload OpenLiteSpeed to apply configurations
+    # 12. Fix APT repository label/release info changes to prevent PHP extension install failure
+    try:
+        if shutil.which('apt-get'):
+            log_callback("\n📦 Diagnosing and repairing APT repository release info changes...\n")
+            res = subprocess.run(["sudo", "apt-get", "update", "--allow-releaseinfo-change"], capture_output=True, text=True)
+            if res.returncode == 0:
+                log_callback("✅ APT repository release info changes successfully accepted.\n")
+            else:
+                log_callback(f"⚠️ [Warning] Failed to run apt-get update --allow-releaseinfo-change: {res.stderr.strip()}\n")
+        else:
+            log_callback("\nℹ️ [Skip] Not a Debian/Ubuntu system, skipping APT release info healing.\n")
+    except Exception as e:
+        log_callback(f"❌ [Error] Repairing APT repository release info changes: {str(e)}\n")
+
+    # 13. Reload OpenLiteSpeed to apply configurations
     try:
         log_callback("\n🔄 Reloading OpenLiteSpeed web server...\n")
         subprocess.run(["/usr/local/lsws/bin/lswsctrl", "reload"])

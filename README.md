@@ -14,6 +14,7 @@ A lightweight, robust, and interactive utility plugin designed for OLSPanel serv
    - Restores missing `/home/fortunedevs/public_html/html` Document Root directories with correct user ownership.
    - Recreates missing or broken phpMyAdmin / Webmail symlinks in `/usr/local/lsws/Example/html/`.
    - Recursively sets RainLoop webmail data directories to `777` (world-writable) for suEXEC compatibility.
+   - Diagnoses and repairs APT repository release info changes automatically to prevent PHP package/extension installation failures.
 
 ## 📦 How to Build / Pack
 To bundle this plugin as a zip archive ready for uploading/installing inside OLSPanel, run:
