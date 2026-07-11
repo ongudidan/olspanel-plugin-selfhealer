@@ -347,23 +347,31 @@ def download_script_only"""
     except Exception as ve:
         log_callback(f"❌ [Error] Patching users/views.py: {str(ve)}\n")
 
-    # Patch H: Avoid systemd restart CP deadlock by adding --no-block
+    # Patch H: Avoid systemd restart CP deadlock by using Popen with a 2-second delay
     try:
         whm_func_file = os.path.join(settings.BASE_DIR, 'whm/function.py')
         if os.path.exists(whm_func_file):
             with open(whm_func_file, 'r') as f:
                 whm_func_content = f.read()
 
-            target_block = 'subprocess.run(["sudo", "systemctl", "restart", "cp"], check=True)'
-            patched_block = 'subprocess.run(["sudo", "systemctl", "restart", "cp", "--no-block"], check=True)'
+            target_block_1 = 'subprocess.run(["sudo", "systemctl", "restart", "cp"], check=True)'
+            target_block_2 = 'subprocess.run(["sudo", "systemctl", "restart", "cp", "--no-block"], check=True)'
+            patched_block = 'subprocess.Popen("sleep 2 && sudo systemctl restart cp", shell=True, start_new_session=True)'
 
-            if target_block in whm_func_content:
-                whm_func_content = whm_func_content.replace(target_block, patched_block)
+            modified = False
+            if target_block_1 in whm_func_content:
+                whm_func_content = whm_func_content.replace(target_block_1, patched_block)
+                modified = True
+            elif target_block_2 in whm_func_content:
+                whm_func_content = whm_func_content.replace(target_block_2, patched_block)
+                modified = True
+
+            if modified:
                 with open(whm_func_file, 'w') as f:
                     f.write(whm_func_content)
                 import py_compile
                 py_compile.compile(whm_func_file)
-                log_callback("✅ [Bug Fix] Patched whm/function.py to add --no-block to panel restart, avoiding deadlocks.\n")
+                log_callback("✅ [Bug Fix] Patched whm/function.py to use asynchronous delayed panel restart, avoiding hangs.\n")
             else:
                 log_callback("ℹ️ [Bug Fix] whm/function.py already patched or block not found.\n")
     except Exception as he:
