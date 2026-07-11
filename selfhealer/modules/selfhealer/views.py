@@ -347,6 +347,28 @@ def download_script_only"""
     except Exception as ve:
         log_callback(f"❌ [Error] Patching users/views.py: {str(ve)}\n")
 
+    # Patch H: Avoid systemd restart CP deadlock by adding --no-block
+    try:
+        whm_func_file = os.path.join(settings.BASE_DIR, 'whm/function.py')
+        if os.path.exists(whm_func_file):
+            with open(whm_func_file, 'r') as f:
+                whm_func_content = f.read()
+
+            target_block = 'subprocess.run(["sudo", "systemctl", "restart", "cp"], check=True)'
+            patched_block = 'subprocess.run(["sudo", "systemctl", "restart", "cp", "--no-block"], check=True)'
+
+            if target_block in whm_func_content:
+                whm_func_content = whm_func_content.replace(target_block, patched_block)
+                with open(whm_func_file, 'w') as f:
+                    f.write(whm_func_content)
+                import py_compile
+                py_compile.compile(whm_func_file)
+                log_callback("✅ [Bug Fix] Patched whm/function.py to add --no-block to panel restart, avoiding deadlocks.\n")
+            else:
+                log_callback("ℹ️ [Bug Fix] whm/function.py already patched or block not found.\n")
+    except Exception as he:
+        log_callback(f"❌ [Error] Patching whm/function.py: {str(he)}\n")
+
 
     # Patch D: Solve FOUC & SVG lag on base.html files
     try:
