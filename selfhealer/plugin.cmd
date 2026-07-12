@@ -20,6 +20,8 @@ ICON_PNG_DEST="$BASE_DIR/media/icon/selfhealer.png"
 
 # Copy Django module to the system modules directory
 if [ -d "$MODULE_SRC" ]; then
+  # Clean up existing module directory to prevent stale configurations
+  rm -rf "$MODULE_DEST"
   mkdir -p "$MODULE_DEST"
   cp -rf "$MODULE_SRC"/* "$MODULE_DEST"/
   chown -R www-data:www-data "$MODULE_DEST"
