@@ -44,7 +44,7 @@ class SelfHealerConfig(AppConfig):
                             if os.path.exists(modules_dir):
                                 for name in os.listdir(modules_dir):
                                     mod_path = os.path.join(modules_dir, name)
-                                    if os.path.isdir(mod_path) and name not in ['.', '..', '__pycache__']:
+                                    if os.path.isdir(mod_path) and name not in ['.', '..', '__pycache__', 'webterminal']:
                                         meta = known_meta.get(name, {})
                                         display_name = meta.get("name") or name.replace('_', ' ').replace('-', ' ').title()
                                         
