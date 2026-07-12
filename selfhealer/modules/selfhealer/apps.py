@@ -36,6 +36,12 @@ class SelfHealerConfig(AppConfig):
                                     "category": "Terminal",
                                     "image": "/media/icon/selfhealer.svg",
                                     "url": "/module/selfhealer/gui/"
+                                },
+                                "webterminal": {
+                                    "name": "Web Terminal",
+                                    "category": "Terminal",
+                                    "image": "/media/icon/terminal.svg",
+                                    "url": "/module/webterminal/gui/"
                                 }
                             }
 
